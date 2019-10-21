@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>HW1</title>
+  <!-- Stylesheets -->
+  <style>
+    html, body { overflow: hidden; background-color: #0a0a0a; }
+    main { display: flex; flex-direction: column; height: 100vh; min-height: 100%; }
+    canvas { position: absolute; width: 100%; height: 100%; }
+    }
+  </style>
+
+</head>
+<body>
+
+  <main>
+    <!-- Main viewer -->
+    <section class="viewer">
+      <canvas id="glmandel"></canvas>
+      <canvas id="gljulia"></canvas>
+      <canvas id="glcontrol"></canvas>
+    </section>
+
+  </main>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/twgl-base.js@4.8.2/dist/4.x/twgl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/double.js@0.0.6/dist/double.iife.min.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/shaders.js"></script>
+</body>
+</html>
