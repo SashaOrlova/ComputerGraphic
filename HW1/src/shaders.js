@@ -88,7 +88,6 @@ let frag = () => `
     ${helpers}
 
     void main() {
-      //¬ычислени€, используем переданную текстурку
       result R = calculator(vec2(0));
 
       float dem = sqrt(R.zz / R.dzdz) * log2(R.zz);

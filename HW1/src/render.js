@@ -1,6 +1,8 @@
 let imax = 100;
 let squareRadius = 3e5;
 let state = { x: new Double(-0.75), y: new Double(0), hx: new Double(1.25), hy: new Double(1.15)};
+let centerX;
+let centerY;
 
 const Events = {
   lastPos : {},
@@ -8,7 +10,7 @@ const Events = {
   Zoom(pos, factor) {
     state.x = pos.x;
     state.y = pos.y;
-    lastPos = pos;
+    Events.lastPos = pos;
     state.hx = state.hx.mul(factor);
     state.hy = state.hy.mul(factor);
     drawAll(state);
@@ -21,6 +23,8 @@ const Events = {
     ctx.clearRect(0, 0, glcontrol.width, glcontrol.height);
     glcontrol.width = ctx.canvas.clientWidth;
     glcontrol.height = ctx.canvas.clientHeight;
+    centerX = Math.round(ctx.canvas.clientWidth / 2);
+    centerY = Math.round(ctx.canvas.clientHeight / 2);
     const gl = twgl.getContext(document.getElementById('gljulia'));
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
@@ -41,7 +45,6 @@ let glMandel = twgl.getWebGLContext(document.getElementById('glmandel'), { antia
 twgl.addExtensionsToContext(glMandel);
 
 function calcArea(c, returnIteration) {
-  console.log(c);
   let x = c.x, y = c.y;
   let xx = x.sqr(), yy = y.sqr(), xy = x.mul(y);
   let dx = Double.One, dy = Double.Zero, temp;
@@ -170,7 +173,11 @@ glcontrol.addEventListener('wheel', e => {
 
 glcontrol.addEventListener('mouseup', e => {
   e.preventDefault();
-  setTimeout(() => moveMouse(getPosOnScreen(e)));
+  let new_pos = getPosOnScreen(e);
+  console.log(e.offsetX, e.offsetY);
+  let x = centerX - (new_pos.px - mouseDownPos.px);
+  let y = centerY - (new_pos.py - mouseDownPos.py);
+  setTimeout(() => moveMouse(getPosOnScreen({offsetX: x, offsetY: y})));
 });
 
 glcontrol.addEventListener('mousedown', e => {
