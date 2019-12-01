@@ -11,7 +11,6 @@
 		<script src="fungi.core.js"></script>
 		<script src="fungi.primatives.js"></script>
 		<script src="fungi.KBMCtrl.js"></script>
-		<script src="fungi.Debug.js"></script>
 		<script src="fungiApp.js"></script>
 
 		<script>
@@ -19,6 +18,8 @@
 				FungiApp.startup();
 				Fungi.Shaders.New("LowPoly","vertex_lowpoly","fragment_lowpoly")
 					.prepareUniforms(Fungi.UNI_MODEL_MAT_NAME,"mat4")
+					.prepareUniforms("uTime", "float")
+					.prepareUniforms("uHeightMap", "tex")
 					.prepareUniformBlocks(FungiApp.uboTransform,0);
 				Fungi.Shaders.Material.create("MatLowPoly","LowPoly");
 				var model = new Fungi.Renderable(Fungi.Primatives.FacedCube(),"MatLowPoly").setPosition(0, 0, 0);
@@ -53,15 +54,15 @@
 
 		const float uColumnCnt = 5.0;
 
-		out highp vec2 vUV;
+		out highp vec2 vUv0;
 
 		void main(void){
-			vUV = vec2(a_uv.s,1.0-a_uv.t);
+			vUv0 = vec2(a_uv.s,1.0-a_uv.t);
 			gl_Position =  vec4(a_position.xyz, 1.0);
 
 			vec4 wpos 	= uModalMatrix * vec4(a_position.xyz,1.0);
 			vWorldPos	= wpos.xyz;
-			vCameraPos	= (inverse(matCameraView) * vec4(posCamera,1.0)).xyz; //Need to pass Camera pos turned to WorldSpace avoid inverse matrix
+			vCameraPos	= (inverse(matCameraView) * vec4(posCamera,1.0)).xyz;
 			gl_Position	= matProjection * matCameraView * wpos;
 		}
 	</script>
@@ -72,6 +73,10 @@
 		in vec3 vWorldPos;
 		in vec3 vCameraPos;
 		in vec2 vLowPoly;
+		in vec2 vUv0;
+
+		uniform sampler2D uHeightMap;
+		uniform float uTime;
 
 		const vec3 uLightPos			= vec3(4.0,2.0,1.0);
 		const vec3 uBaseColor			= vec3(1.0,0.5,0.5);
@@ -95,6 +100,10 @@
 			vec3 reflectVector	= reflect(-lightVector, pixelNorm);
 			float specular		= pow( max( dot(reflectVector,camVector) ,0.0), uSpecularShininess );
 			vec3 cSpecular		= uLightColor * specular * uSpecularStrength;
+			float height = texture(uHeightMap, vUv0).r;
+			if (height < uTime) {
+			  discard;
+			}
 			outColor = vec4( uBaseColor * ((cAmbient + cDiffuse + cSpecular) * LowPolyFactor), 1.0);
 		}
 	</script>

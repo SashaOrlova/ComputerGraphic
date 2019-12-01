@@ -41,13 +41,6 @@ Fungi.Primatives = {
 			 1, 0, 0,	 1, 0, 0,	 1, 0, 0,	 1, 0, 0,
 			 0, 1, 0,	 0, 1, 0,	 0, 1, 0,	 0, 1, 0
 		];
-
-		console.log([
-			x0, y1, z1,
-			x0, y0, z1,
-			x1, y0, z1,
-			x1, y1, z1,
-		]);
 		return Fungi.Shaders.VAO.standardMesh("FungiFCube",4,aVert,aNorm,aUV,aIndex,false);
 	}
 }; 

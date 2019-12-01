@@ -373,7 +373,7 @@ var Fungi = (function(){
 			if(arguments.length % 2 != 0 ){ console.log("prepareUniforms needs arguments to be in pairs."); return this; }
 			
 			var loc = 0;
-			for(var i=0; i < arguments.length; i+=2){
+			for(var i=0; i < arguments.length; i += 2){
 				loc = gl.getUniformLocation(this.program,arguments[i]);
 				if(loc != null) this._UniformList[arguments[i]] = {loc:loc,type:arguments[i+1]};
 				else console.log("Uniform not found " + arguments[i]);
@@ -390,23 +390,19 @@ var Fungi = (function(){
 		setUniforms(uName,uValue){
 			if(arguments.length % 2 != 0){ console.log("setUniforms needs arguments to be in pairs."); return this; }
 
-			var texCnt = 0,
-				name;
-
+			var name;
 			for(var i=0; i < arguments.length; i+=2){
 				name = arguments[i];
 				if(this._UniformList[name] === undefined){ console.log("uniform not found " + name); return this; }
-
 				switch(this._UniformList[name].type){
 					case "vec2":	gl.uniform2fv(this._UniformList[name].loc, arguments[i+1]); break;
 					case "vec3":	gl.uniform3fv(this._UniformList[name].loc, arguments[i+1]); break;
 					case "vec4":	gl.uniform4fv(this._UniformList[name].loc, arguments[i+1]); break;
+					case "float": gl.uniform1f(this._UniformList[name].loc, arguments[i+1]); break;
 					case "mat4":	gl.uniformMatrix4fv(this._UniformList[name].loc,false,arguments[i+1]); break;
 					case "tex":
-						gl.activeTexture(gl["TEXTURE" + texCnt]);
-						gl.bindTexture(gl.TEXTURE_2D,uValue);
-						gl.uniform1i(this._UniformList[name].loc,texCnt);
-						texCnt++;
+						FungiApp.loadTexture("https://hsto.org/getpro/habr/post_images/1cc/f52/1cd/1ccf521cdd1ba16cdaa45b33ae50fec4.png");
+						gl.uniform1i(this._UniformList[name].loc, 0);
 						break;
 					default: console.log("unknown uniform type for " + name); break;
 				}
@@ -698,6 +694,8 @@ var Fungi = (function(){
 				if(f.material.useDepthTest != DEPTHTEST_STATE)	gl[ ( (DEPTHTEST_STATE = (!DEPTHTEST_STATE)) )?"enable":"disable" ](gl.DEPTH_TEST);
 			}
 			if(f.material.useModelMatrix) f.material.shader.setUniforms(Fungi.UNI_MODEL_MAT_NAME,itm.updateMatrix());
+			f.material.shader.setUniforms("uHeightMap", "");
+			f.material.shader.setUniforms("uTime", FungiApp.getUTime());
 			return itm;
 		}
 		return f;
