@@ -4,6 +4,8 @@ FungiApp = {
 	ctrlCamera		:null,
 	debugLines		:null,
 	gridFloor		:null,
+	LOADING_MANAGER : null,
+	OBJ_LOADER: null,
 	uboTransform	:null,
 	UTine 		: 0.0,
 	delta			: 0.05,
@@ -25,6 +27,8 @@ FungiApp = {
 		return FungiApp.UTine;
 	},
 	startup:function(){
+		FungiApp.initLoaders();
+		FungiApp.loadModel();
 		Fungi.Init("FungiCanvas").fClearColor("FFFFFF").fFitScreen(1,1).fClear();
 		this.uboTransform	= Fungi.Shaders.UBO.createTransformUBO();
 		this.mainCamera		= new Fungi.CameraOrbit().setPosition(0,0.5,5).setEulerDegrees(-15,45,0);
@@ -74,5 +78,10 @@ FungiApp = {
 
 	isPowerOf2(value) {
 	return (value & (value - 1)) == 0;
-}
+},
+	initLoaders() {
+},
+	loadModel() {
+    return new OBJ.Mesh(objStr);
+	},
 };

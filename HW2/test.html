@@ -12,6 +12,10 @@
 		<script src="fungi.primatives.js"></script>
 		<script src="fungi.KBMCtrl.js"></script>
 		<script src="fungiApp.js"></script>
+		<script src="Object.js"></script>
+		<script src="ObjLoader.js"></script>
+
+		<script src="src/webgl-obj-loader.js"></script>
 
 		<script>
 			window.addEventListener("load",function(){
@@ -22,7 +26,7 @@
 					.prepareUniforms("uHeightMap", "tex")
 					.prepareUniformBlocks(FungiApp.uboTransform,0);
 				Fungi.Shaders.Material.create("MatLowPoly","LowPoly");
-				var model = new Fungi.Renderable(Fungi.Primatives.FacedCube(),"MatLowPoly").setPosition(0, 0, 0);
+				var model = (new Fungi.Renderable(Fungi.Primatives.Bunny(),"MatLowPoly").setPosition(0, 0, 0));
 				FungiApp.scene.push(model);
 				FungiApp.renderLoop.start();
 			});

@@ -598,7 +598,7 @@ var Fungi = (function(){
 			return VAO;
 		}
 
-		static standardMesh(name,vertSize,aryVert,aryNorm,aryUV,aryInd,keepData){
+		static standardMesh(name,vertSize,aryVert,aryNorm,aryUV, aryInd, keepData){
 			var rtn = {};
 			VAO.create(rtn).floatArrayBuffer(rtn,"vert",aryVert,Fungi.ATTR_POSITION_LOC,vertSize,0,0,true,keepData);
 			rtn.count = rtn.buffers["vert"].count;

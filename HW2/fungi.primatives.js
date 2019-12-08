@@ -42,5 +42,12 @@ Fungi.Primatives = {
 			 0, 1, 0,	 0, 1, 0,	 0, 1, 0,	 0, 1, 0
 		];
 		return Fungi.Shaders.VAO.standardMesh("FungiFCube",4,aVert,aNorm,aUV,aIndex,false);
-	}
+	},
+
+	Bunny: function() {
+    FungiApp.initLoaders();
+    var model = FungiApp.loadModel();
+    console.log(model);
+    return Fungi.Shaders.VAO.standardMesh("Bunny",3,model.vertices, model.vertexNormals,model.textures, model.indices,false);
+  }
 }; 
