@@ -8,7 +8,7 @@ FungiApp = {
 	OBJ_LOADER: null,
 	uboTransform	:null,
 	UTine 		: 0.0,
-	delta			: 0.05,
+	delta			: 0.0005,
 	tryes 		: 10,
 	scene			:[],
 	image 		: null,
@@ -21,7 +21,7 @@ FungiApp = {
 
 		FungiApp.tryes--;
 		if (FungiApp.tryes == 0) {
-			FungiApp.tryes = 10;
+			FungiApp.tryes = 1;
 			FungiApp.UTine += FungiApp.delta;
 		}
 		return FungiApp.UTine;

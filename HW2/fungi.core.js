@@ -77,7 +77,8 @@ var Fungi = (function(){
 			this.localMatrix = new Matrix4();
 		}
 		setPosition(x,y,z){	this.position.set(x,y,z);	return this; }
-		updateMatrix(){
+    setScale(x,y,z){	this.scale.set(x,y,z);		return this; }
+    updateMatrix(){
 			if(!this.position.isModified && !this.scale.isModified && !this.rotation.isModified) return this.localMatrix;
 			Matrix4.fromQuaternionTranslationScale(this.localMatrix, this.rotation, this.position, this.scale);
 			this.position.isModified	= false;
