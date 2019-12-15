@@ -24,6 +24,7 @@
 					.prepareUniforms(Fungi.UNI_MODEL_MAT_NAME,"mat4")
 					.prepareUniforms("uTime", "float")
 					.prepareUniforms("uHeightMap", "tex")
+					.prepareUniforms("needTexture", "bool")
 					.prepareUniformBlocks(FungiApp.uboTransform,0);
 				Fungi.Shaders.Material.create("MatLowPoly","LowPoly");
 				var model = (new Fungi.Renderable(Fungi.Primatives.Bunny(),"MatLowPoly").setPosition(-1, 0, 0).setScale(0.05, 0.05, 0.05));
@@ -39,6 +40,7 @@
 		</script>
 	</head>
 <body>
+On/Off Texture: <input type="checkbox" id="myCheck">
 	<div><canvas id="FungiCanvas"></canvas></div>
 	<script id="vertex_lowpoly" type="x-shader/x-vertex">#version 300 es
 		layout(location=0) in vec4 a_position;
@@ -93,6 +95,7 @@
 		const float uSpecularShininess	= 1.0f;
 
 		out vec4 outColor;
+		uniform bool needTexture;
 
 		void main(void){
 			float LowPolyFactor = (vLowPoly.y >= 0.9999)? 1.1 : 1.0;
@@ -109,7 +112,11 @@
 			if (height < uTime) {
 			  discard;
 			}
-			outColor = vec4( uBaseColor * ((cAmbient + cDiffuse + cSpecular) * LowPolyFactor), 1.0);
+			if (needTexture) {
+				outColor = texture(uHeightMap, vUv0);
+			} else {
+				outColor = vec4( uBaseColor * ((cAmbient + cDiffuse + cSpecular) * LowPolyFactor), 1.0);
+			}
 		}
 	</script>
 </body>

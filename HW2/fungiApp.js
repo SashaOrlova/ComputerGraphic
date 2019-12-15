@@ -26,6 +26,10 @@ FungiApp = {
 		}
 		return FungiApp.UTine;
 	},
+	getNeedTexture: function() {
+		var checkBox = document.getElementById("myCheck");
+		return checkBox.checked;
+	},
 	startup:function(){
 		FungiApp.initLoaders();
 		FungiApp.loadModel();

@@ -400,6 +400,7 @@ var Fungi = (function(){
 					case "vec3":	gl.uniform3fv(this._UniformList[name].loc, arguments[i+1]); break;
 					case "vec4":	gl.uniform4fv(this._UniformList[name].loc, arguments[i+1]); break;
 					case "float": gl.uniform1f(this._UniformList[name].loc, arguments[i+1]); break;
+					case "bool":  gl.uniform1f(this._UniformList[name].loc, arguments[i+1]); break;
 					case "mat4":	gl.uniformMatrix4fv(this._UniformList[name].loc,false,arguments[i+1]); break;
 					case "tex":
 						FungiApp.loadTexture("https://hsto.org/getpro/habr/post_images/1cc/f52/1cd/1ccf521cdd1ba16cdaa45b33ae50fec4.png");
@@ -697,6 +698,7 @@ var Fungi = (function(){
 			if(f.material.useModelMatrix) f.material.shader.setUniforms(Fungi.UNI_MODEL_MAT_NAME,itm.updateMatrix());
 			f.material.shader.setUniforms("uHeightMap", "");
 			f.material.shader.setUniforms("uTime", FungiApp.getUTime());
+			f.material.shader.setUniforms("needTexture", FungiApp.getNeedTexture());
 			return itm;
 		}
 		return f;
