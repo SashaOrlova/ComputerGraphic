@@ -403,7 +403,7 @@ var Fungi = (function(){
 					case "bool":  gl.uniform1f(this._UniformList[name].loc, arguments[i+1]); break;
 					case "mat4":	gl.uniformMatrix4fv(this._UniformList[name].loc,false,arguments[i+1]); break;
 					case "tex":
-						FungiApp.loadTexture("https://hsto.org/getpro/habr/post_images/1cc/f52/1cd/1ccf521cdd1ba16cdaa45b33ae50fec4.png");
+						FungiApp.loadTexture();
 						gl.uniform1i(this._UniformList[name].loc, 0);
 						break;
 					default: console.log("unknown uniform type for " + name); break;

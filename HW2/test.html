@@ -82,7 +82,7 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 		in vec2 vLowPoly;
 		in vec2 vUv0;
 
-		uniform sampler2D uHeightMap;
+		uniform mediump sampler3D uHeightMap;
 		uniform float uTime;
 
 		const vec3 uLightPos			= vec3(4.0,2.0,1.0);
@@ -96,6 +96,7 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 
 		out vec4 outColor;
 		uniform bool needTexture;
+		uniform highp sampler3D volume;
 
 		void main(void){
 			float LowPolyFactor = (vLowPoly.y >= 0.9999)? 1.1 : 1.0;
@@ -108,12 +109,12 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 			vec3 reflectVector	= reflect(-lightVector, pixelNorm);
 			float specular		= pow( max( dot(reflectVector,camVector) ,0.0), uSpecularShininess );
 			vec3 cSpecular		= uLightColor * specular * uSpecularStrength;
-			float height = texture(uHeightMap, vUv0).r;
+			float height = texture(uHeightMap, vec3(vWorldPos.x*0.05, vWorldPos.y*0.05, abs(vWorldPos.z*0.05))).r;
 			if (height < uTime) {
 			  discard;
 			}
 			if (needTexture) {
-				outColor = texture(uHeightMap, vUv0);
+				outColor = texture(uHeightMap, vec3(vWorldPos.x*0.05, vWorldPos.y*0.05, abs(vWorldPos.z*0.05)));
 			} else {
 				outColor = vec4( uBaseColor * ((cAmbient + cDiffuse + cSpecular) * LowPolyFactor), 1.0);
 			}

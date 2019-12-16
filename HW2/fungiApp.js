@@ -45,37 +45,40 @@ FungiApp = {
 		Fungi.gl.fClear();
 	},
 
-	loadTexture(url) {
-	if (FungiApp.image) {
-		return;
-	}
-	var gl = Fungi.gl;
-	const texture = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, texture);
+	getRandomInt: function(max) {
+	return Math.floor(Math.random() * Math.floor(max));
+	},
 
-	const level = 0;
-	const internalFormat = gl.RGBA;
-	const srcFormat = gl.RGBA;
-	const srcType = gl.UNSIGNED_BYTE;
-
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-		new Uint8Array([0, 0, 255, 255]));
-
-	FungiApp.image = new Image();
-	FungiApp.image.crossOrigin = "anonymous";
-	FungiApp.image.src = url;
-	FungiApp.image.onload = function() {
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, FungiApp.image);
-		if (FungiApp.isPowerOf2(FungiApp.image.width) && FungiApp.isPowerOf2(FungiApp.image.height)) {
-			gl.generateMipmap(gl.TEXTURE_2D);
-		} else {
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	loadTexture() {
+		if (this.image) {
+			return
 		}
-	};
+		this.image = true;
+
+		var gl = Fungi.gl;
+		const texture = gl.createTexture();
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_3D, texture);
+
+		SIZE = 64;
+		var data = new Uint8Array(SIZE * SIZE * SIZE * 4);
+		for (var i = 0; i < SIZE*SIZE*SIZE; i+=4) {
+			current = this.getRandomInt(256);
+			data[i] = current;
+			data[i + 1] = current;
+			data[i + 2] = current;
+			data[i + 3] = current;
+		}
+		gl.bindTexture(gl.TEXTURE_3D, texture);
+
+		gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA, SIZE, SIZE, SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+		if (FungiApp.isPowerOf2(SIZE) && FungiApp.isPowerOf2(SIZE)) {
+			gl.generateMipmap(gl.TEXTURE_3D);
+		} else {
+			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		}
 
 	return texture;
 },
