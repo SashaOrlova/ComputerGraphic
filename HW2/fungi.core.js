@@ -98,6 +98,7 @@ var Fungi = (function(){
 		draw(){
 			if(this.vao.count == 0) return;
 			gl.bindVertexArray(this.vao.id);
+			console.log(this.vao);
 			if (this.vao.isIndexed) {
 				gl.drawElements(this.material.drawMode, this.vao.count, gl.UNSIGNED_SHORT, 0);
 			}
