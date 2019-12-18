@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			html,body{margin:0px; padding:0px; width:100%; height:100%;}
+			body{background-color:#404040;}
+			canvas{border:0px solid black;}
+			div{display:flex; width:100%; height:100%; align-items:center; justify-content:center;}
+		</style>
+		<script src="https://threejs.org/build/three.js"></script>
+		<script src="fungi.core.js"></script>
+		<script src="fungi.primatives.js"></script>
+		<script src="fungi.KBMCtrl.js"></script>
+		<script src="fungiApp.js"></script>
+		<script src="Object.js"></script>
+		<script src="ObjLoader.js"></script>
+
+		<script src="src/webgl-obj-loader.js"></script>
+
+		<script>
+			window.addEventListener("load",function(){
+				FungiApp.startup();
+				Fungi.Shaders.New("LowPoly","vertex_lowpoly","fragment_lowpoly")
+					.prepareUniforms(Fungi.UNI_MODEL_MAT_NAME,"mat4")
+					.prepareUniforms("uTime", "float")
+					.prepareUniforms("uHeightMap", "tex")
+					.prepareUniforms("needTexture", "bool")
+					.prepareUniformBlocks(FungiApp.uboTransform,0);
+				mat = Fungi.Shaders.Material.create("MatLowPoly","LowPoly");
+				mat.drawMode = Fungi.gl.TRIANGLES;
+				var model = (new Fungi.Renderable(Fungi.Primatives.Bunny(),"MatLowPoly").setPosition(0, 0, 0).setScale(0.02, 0.02, 0.02));
+				FungiApp.scene.push(model);
+				FungiApp.renderLoop.start();
+			});
+
+			function onRender(dt){
+				FungiApp.update();
+				Fungi.Render(FungiApp.scene);
+			}
+		</script>
+	</head>
+<body>
+On/Off Texture: <input type="checkbox" id="myCheck">
+	<div><canvas id="FungiCanvas"></canvas></div>
+	<script id="vertex_lowpoly" type="x-shader/x-vertex">#version 300 es
+		layout(location=0) in vec4 a_position;
+		layout(location=1) in vec3 a_norm;
+		layout(location=2) in vec2 a_uv;
+
+		uniform UBOTransform{
+			mat4 matProjection;
+			mat4 matCameraView;
+			vec3 posCamera;
+		};
+
+		uniform mat4 uModalMatrix;
+
+        out vec3 pixelNorm;
+
+		out vec3 vWorldPos;
+		out vec3 vCameraPos;
+		out vec2 vLowPoly;
+
+		const float uColumnCnt = 5.0;
+
+		out highp vec2 vUv0;
+
+		void main(void){
+			vUv0 = vec2(a_uv.s,1.0-a_uv.t);
+			gl_Position =  vec4(a_position.xyz, 1.0);
+			pixelNorm = normalize(pixelNorm);
+			vec4 wpos 	= uModalMatrix * vec4(a_position.xyz,1.0);
+			vWorldPos	= wpos.xyz;
+			vCameraPos	= (inverse(matCameraView) * vec4(posCamera,1.0)).xyz;
+			pixelNorm      = a_norm;
+			gl_Position	= matProjection * matCameraView * wpos;
+		}
+	</script>
+
+	<script id="fragment_lowpoly" type="x-shader/x-fragment">#version 300 es
+				precision mediump float;
+
+	    in vec3 pixelNorm;
+		in vec3 vWorldPos;
+		in vec3 vCameraPos;
+		in vec2 vLowPoly;
+		in vec2 vUv0;
+
+		uniform mediump sampler3D uHeightMap;
+		uniform float uTime;
+
+		const vec3 uLightPos			= vec3(4.0,2.0,1.0);
+		const vec3 uBaseColor			= vec3(1.0,0.5,0.5);
+		const vec3 uLightColor			= vec3(1.0,1.0,1.0);
+
+		const float uAmbientStrength	= 0.5;
+		const float uDiffuseStrength	= 0.5;
+		const float uSpecularStrength	= 0.2f;
+		const float uSpecularShininess	= 1.0f;
+
+		out vec4 outColor;
+		uniform bool needTexture;
+		uniform highp sampler3D volume;
+
+		void main(void){
+			float LowPolyFactor = (vLowPoly.y >= 0.9999)? 1.1 : 1.0;
+			vec3 cAmbient		= uLightColor * uAmbientStrength;
+			vec3 lightVector	= normalize(uLightPos - vWorldPos);
+			float diffuseAngle	= max( dot(pixelNorm,lightVector) ,0.0);
+			vec3 cDiffuse		= uLightColor * diffuseAngle * uDiffuseStrength;
+			vec3 camVector		= normalize(vCameraPos - vWorldPos);
+			vec3 reflectVector	= reflect(-lightVector, pixelNorm);
+			float specular		= pow( max( dot(reflectVector,camVector) ,0.0), uSpecularShininess );
+			vec3 cSpecular		= uLightColor * specular * uSpecularStrength;
+			float height = texture(uHeightMap, vec3(vWorldPos.x*0.05, vWorldPos.y*0.05, abs(vWorldPos.z*0.05))).r;
+			vec3 norm = normalize(pixelNorm);
+			float light = dot(norm, uLightPos);
+
+			outColor = vec4( uBaseColor * ((cAmbient + light*0.07) * LowPolyFactor), 1.0);
+		}
+	</script>
+</body>
+</html>
