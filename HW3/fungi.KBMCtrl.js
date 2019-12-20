@@ -12,6 +12,8 @@ Fungi.KBMCtrl = class{
 		this.canvas.addEventListener("mousedown",this.onMouseDown.bind(this));
 		this.canvas.addEventListener("mouseup",this.onMouseUp.bind(this));
 		this.canvas.addEventListener("mousewheel", this.onMouseWheel.bind(this));
+		document.addEventListener("keydown",this.onKeyDown.bind(this));
+		document.addEventListener("keyup",this.onKeyUp.bind(this));
 		this._activeHandler = null;
 		this._handlers = {};
 	}
@@ -60,6 +62,19 @@ Fungi.KBMCtrl = class{
 		this.canvas.removeEventListener("mousemove",this._boundMouseMove);
 		if(this._activeHandler.onMouseUp) this._activeHandler.onMouseUp(e,this,x,y,dx,dy);
 	}
+	onKeyDown(e){
+		if(this._activeHandler.onKeyDown){
+			e.preventDefault(); e.stopPropagation();
+			this._activeHandler.onKeyDown(e,this,e.keyCode);
+		}
+	}
+
+	onKeyUp(e){
+		if(this._activeHandler.onKeyUp){
+			this._activeHandler.onKeyUp(e,this,e.keyCode);
+			e.preventDefault(); e.stopPropagation();
+		}
+	}
 };
 
 Fungi.KBMCtrl_Viewport = class{
@@ -83,6 +98,16 @@ Fungi.KBMCtrl_Viewport = class{
 		}else{
 			this.camera.position.x += -dx * this.xPanRate;
 			this.camera.position.y += dy * this.yPanRate;
+		}
+	}
+	onKeyDown(e,ctrl,keyCode){
+		switch(keyCode){
+			case 87: this.camera.position.z -= 2 * this.zPanRate; break;	//W
+			case 83: this.camera.position.z += 2 * this.zPanRate; break;	//S
+			case 65: this.camera.position.x -= 50 * this.xPanRate; break;	//A
+			case 68: this.camera.position.x += 50 * this.xPanRate; break;	//D
+			case 81: this.camera.euler.y += 10 * this.yRotRate; break;		//Q
+			case 69: this.camera.euler.y -= 10 * this.yRotRate; break;		//E
 		}
 	}
 }
