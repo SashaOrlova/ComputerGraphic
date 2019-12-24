@@ -28,6 +28,7 @@ FungiApp = {
 	},
 	getNeedTexture: function() {
 		var checkBox = document.getElementById("myCheck");
+		console.log(checkBox.checked);
 		return checkBox.checked;
 	},
 	startup:function(){
@@ -58,27 +59,37 @@ FungiApp = {
 		var gl = Fungi.gl;
 		const texture = gl.createTexture();
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_3D, texture);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
 
 		SIZE = 64;
-		var data = new Uint8Array(SIZE * SIZE * SIZE * 4);
-		for (var i = 0; i < SIZE*SIZE*SIZE; i+=4) {
+		var data = new Uint8Array(SIZE * SIZE * 4);
+		for (var i = 0; i < SIZE*SIZE; i+=4) {
 			current = this.getRandomInt(256);
 			data[i] = current;
 			data[i + 1] = current;
 			data[i + 2] = current;
 			data[i + 3] = current;
 		}
-		gl.bindTexture(gl.TEXTURE_3D, texture);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
 
-		gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA, SIZE, SIZE, SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, SIZE, SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
 		if (FungiApp.isPowerOf2(SIZE) && FungiApp.isPowerOf2(SIZE)) {
-			gl.generateMipmap(gl.TEXTURE_3D);
+			gl.generateMipmap(gl.TEXTURE_2D);
 		} else {
-			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		}
+		gl.activeTexture(gl.TEXTURE1);
+		var positionTarget = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, positionTarget);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, positionTarget, 0);
 
 	return texture;
 },
@@ -87,7 +98,7 @@ FungiApp = {
 	return (value & (value - 1)) == 0;
 },
 	initLoaders() {
-		
+
 },
 	loadModel() {
 		let loader = new THREE.OBJLoader();

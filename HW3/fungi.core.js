@@ -390,7 +390,7 @@ var Fungi = (function(){
 			}
 			return this;
 		}
-		setUniforms(uName,uValue){
+		setUniforms(uName,uValue, sup = 0){
 			if(arguments.length % 2 != 0){ console.log("setUniforms needs arguments to be in pairs."); return this; }
 
 			var name;
@@ -407,6 +407,7 @@ var Fungi = (function(){
 					case "tex":
 						FungiApp.loadTexture();
 						gl.uniform1i(this._UniformList[name].loc, 0);
+						gl.uniform1i(this._UniformList[name].loc, 1);
 						break;
 					default: console.log("unknown uniform type for " + name); break;
 				}
@@ -699,9 +700,10 @@ var Fungi = (function(){
 				if(f.material.useDepthTest != DEPTHTEST_STATE)	gl[ ( (DEPTHTEST_STATE = (!DEPTHTEST_STATE)) )?"enable":"disable" ](gl.DEPTH_TEST);
 			}
 			if(f.material.useModelMatrix) f.material.shader.setUniforms(Fungi.UNI_MODEL_MAT_NAME,itm.updateMatrix());
-			f.material.shader.setUniforms("uHeightMap", "");
-			f.material.shader.setUniforms("uTime", FungiApp.getUTime());
+			f.material.shader.setUniforms("uNoiseBuffer", "");
+			f.material.shader.setUniforms("uPositionBuffer", "");
 			f.material.shader.setUniforms("needTexture", FungiApp.getNeedTexture());
+			console.log("HERE");
 			return itm;
 		}
 		return f;

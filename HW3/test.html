@@ -23,8 +23,9 @@
 				Fungi.Shaders.New("LowPoly","vertex_lowpoly","fragment_lowpoly")
 					.prepareUniforms(Fungi.UNI_MODEL_MAT_NAME,"mat4")
 					.prepareUniforms("uTime", "float")
-					.prepareUniforms("uHeightMap", "tex")
 					.prepareUniforms("needTexture", "bool")
+					.prepareUniforms("uNoiseBuffer", "tex")
+					.prepareUniforms("uPositionBuffer", "tex")
 					.prepareUniformBlocks(FungiApp.uboTransform,0);
 				mat = Fungi.Shaders.Material.create("MatLowPoly","LowPoly");
 				mat.drawMode = Fungi.gl.TRIANGLES;
@@ -40,7 +41,7 @@
 		</script>
 	</head>
 <body>
-On/Off Texture: <input type="checkbox" id="myCheck">
+On/Off SSAO: <input type="checkbox" id="myCheck">
 	<div><canvas id="FungiCanvas"></canvas></div>
 	<script id="vertex_lowpoly" type="x-shader/x-vertex">#version 300 es
 		layout(location=0) in vec4 a_position;
@@ -60,12 +61,15 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 		out vec3 vWorldPos;
 		out vec3 vCameraPos;
 		out vec2 vLowPoly;
+        out vec4 al_Position;
+        out vec4 vNormal;
 
 		const float uColumnCnt = 5.0;
 
 		out highp vec2 vUv0;
 
 		void main(void){
+            vNormal = uModalMatrix * vec4(a_norm, 0.0);
 			vUv0 = vec2(a_uv.s,1.0-a_uv.t);
 			gl_Position =  vec4(a_position.xyz, 1.0);
 			pixelNorm = normalize(pixelNorm);
@@ -74,6 +78,7 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 			vCameraPos	= (inverse(matCameraView) * vec4(posCamera,1.0)).xyz;
 			pixelNorm      = a_norm;
 			gl_Position	= matProjection * matCameraView * wpos;
+			al_Position = gl_Position;
 		}
 	</script>
 
@@ -85,8 +90,15 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 		in vec3 vCameraPos;
 		in vec2 vLowPoly;
 		in vec2 vUv0;
+		in vec4 al_Position;
 
-		uniform mediump sampler3D uHeightMap;
+        #define SIN45 0.707107
+
+        const float uSampleRadius = 5.0;
+        const float uBias = 0.04;
+        const vec2 uAttenuation = vec2(1.0, 1.0);
+        const vec2 uDepthRange = vec2(0.1, 10.0);
+
 		uniform float uTime;
 
 		const vec3 uLightPos			= vec3(4.0,2.0,1.0);
@@ -98,11 +110,46 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 		const float uSpecularStrength	= 0.2f;
 		const float uSpecularShininess	= 1.0f;
 
+        float occlusion;
 		out vec4 outColor;
 		uniform bool needTexture;
-		uniform highp sampler3D volume;
+
+        uniform mediump sampler2D uNoiseBuffer;
+        uniform mediump sampler2D uPositionBuffer;
+
+        float getOcclusion(vec3 position, vec3 normal, ivec2 fragCoord) {
+            vec4 occlurPosition = texelFetch(uPositionBuffer, ivec2(fragCoord), 0);
+            vec3 positionVec = vec3(occlurPosition) - position;
+            float intensity = max(dot(normal, normalize(positionVec)) - uBias, 0.0);
+
+            float attenuation = 1.0 / (uAttenuation.x + uAttenuation.y * length(positionVec));
+            return intensity * attenuation;
+        }
 
 		void main(void){
+			ivec2 fragCoord = ivec2(gl_FragCoord.xy);
+            vec2 rand = normalize(texelFetch(uNoiseBuffer, fragCoord, 0).xy);
+            float depth = (length(al_Position) - uDepthRange.x) / (uDepthRange.y - uDepthRange.x);
+            float kernelRadius = uSampleRadius * (1.0 - depth);
+            vec2 kernel[4];
+            kernel[0] = vec2(0.0, 1.0);
+            kernel[1] = vec2(1.0, 0.0);
+            kernel[2] = vec2(0.0, -1.0);
+            kernel[3] = vec2(-1.0, 0.0);
+
+            occlusion = 0.0;
+            for (int i = 0; i < 4; ++i) {
+                vec2 k1 = reflect(kernel[i], rand);
+                vec2 k2 = vec2(k1.x * SIN45 - k1.y * SIN45, k1.x * SIN45 + k1.y * SIN45);
+                k1 *= kernelRadius;
+                k2 *= kernelRadius;
+                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k1));
+                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k2 * 0.75));
+                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k1 * 0.5));
+                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k2 * 0.25));
+            }
+
+            occlusion = clamp(occlusion / 16.0, 0.0, 1.0);
 			float LowPolyFactor = (vLowPoly.y >= 0.9999)? 1.1 : 1.0;
 			vec3 cAmbient		= uLightColor * uAmbientStrength;
 			vec3 lightVector	= normalize(uLightPos - vWorldPos);
@@ -112,11 +159,13 @@ On/Off Texture: <input type="checkbox" id="myCheck">
 			vec3 reflectVector	= reflect(-lightVector, pixelNorm);
 			float specular		= pow( max( dot(reflectVector,camVector) ,0.0), uSpecularShininess );
 			vec3 cSpecular		= uLightColor * specular * uSpecularStrength;
-			float height = texture(uHeightMap, vec3(vWorldPos.x*0.05, vWorldPos.y*0.05, abs(vWorldPos.z*0.05))).r;
 			vec3 norm = normalize(pixelNorm);
 			float light = dot(norm, uLightPos);
-
-			outColor = vec4( uBaseColor * ((cAmbient + light*0.07) * LowPolyFactor), 1.0);
+			if (!needTexture) {
+                outColor = vec4( uBaseColor * ((cAmbient + light*0.07 - occlusion) * LowPolyFactor), 1.0);
+            } else {
+                outColor = vec4( uBaseColor * ((cAmbient + light*0.07) * LowPolyFactor), 1.0);
+            }
 		}
 	</script>
 </body>
