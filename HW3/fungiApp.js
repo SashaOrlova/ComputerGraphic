@@ -62,8 +62,8 @@ FungiApp = {
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 
 		SIZE = 64;
-		var data = new Uint8Array(SIZE * SIZE * 4);
-		for (var i = 0; i < SIZE*SIZE; i+=4) {
+		var data = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+		for (var i = 0; i < gl.drawingBufferWidth*gl.drawingBufferHeight; i+=4) {
 			current = this.getRandomInt(256);
 			data[i] = current;
 			data[i + 1] = current;
@@ -72,8 +72,8 @@ FungiApp = {
 		}
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, SIZE, SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
-		if (FungiApp.isPowerOf2(SIZE) && FungiApp.isPowerOf2(SIZE)) {
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+		if (FungiApp.isPowerOf2(gl.drawingBufferWidth) && FungiApp.isPowerOf2(gl.drawingBufferHeight)) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		} else {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -91,6 +91,16 @@ FungiApp = {
 		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, positionTarget, 0);
 
+		gl.activeTexture(gl.TEXTURE2);
+		var normalTarget = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, normalTarget);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, normalTarget, 0);
 	return texture;
 },
 

@@ -408,6 +408,7 @@ var Fungi = (function(){
 						FungiApp.loadTexture();
 						gl.uniform1i(this._UniformList[name].loc, 0);
 						gl.uniform1i(this._UniformList[name].loc, 1);
+						gl.uniform1i(this._UniformList[name].loc, 2);
 						break;
 					default: console.log("unknown uniform type for " + name); break;
 				}

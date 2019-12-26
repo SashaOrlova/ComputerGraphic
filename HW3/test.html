@@ -76,7 +76,7 @@ On/Off SSAO: <input type="checkbox" id="myCheck">
 			vec4 wpos 	= uModalMatrix * vec4(a_position.xyz,1.0);
 			vWorldPos	= wpos.xyz;
 			vCameraPos	= (inverse(matCameraView) * vec4(posCamera,1.0)).xyz;
-			pixelNorm      = a_norm;
+			pixelNorm   = a_norm;
 			gl_Position	= matProjection * matCameraView * wpos;
 			al_Position = gl_Position;
 		}
@@ -116,6 +116,7 @@ On/Off SSAO: <input type="checkbox" id="myCheck">
 
         uniform mediump sampler2D uNoiseBuffer;
         uniform mediump sampler2D uPositionBuffer;
+        uniform sampler2D uNormalBuffer;
 
         float getOcclusion(vec3 position, vec3 normal, ivec2 fragCoord) {
             vec4 occlurPosition = texelFetch(uPositionBuffer, ivec2(fragCoord), 0);
@@ -128,6 +129,8 @@ On/Off SSAO: <input type="checkbox" id="myCheck">
 
 		void main(void){
 			ivec2 fragCoord = ivec2(gl_FragCoord.xy);
+            vec3 position = texelFetch(uPositionBuffer, fragCoord, 0).xyz;
+            vec3 normal = texelFetch(uNormalBuffer, fragCoord, 0).xyz;
             vec2 rand = normalize(texelFetch(uNoiseBuffer, fragCoord, 0).xy);
             float depth = (length(al_Position) - uDepthRange.x) / (uDepthRange.y - uDepthRange.x);
             float kernelRadius = uSampleRadius * (1.0 - depth);
@@ -138,15 +141,16 @@ On/Off SSAO: <input type="checkbox" id="myCheck">
             kernel[3] = vec2(-1.0, 0.0);
 
             occlusion = 0.0;
+            vec3 norm = normalize(pixelNorm);
             for (int i = 0; i < 4; ++i) {
                 vec2 k1 = reflect(kernel[i], rand);
                 vec2 k2 = vec2(k1.x * SIN45 - k1.y * SIN45, k1.x * SIN45 + k1.y * SIN45);
                 k1 *= kernelRadius;
                 k2 *= kernelRadius;
-                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k1));
-                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k2 * 0.75));
-                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k1 * 0.5));
-                occlusion += getOcclusion(al_Position.xyz, pixelNorm, fragCoord + ivec2(k2 * 0.25));
+                occlusion += getOcclusion(al_Position.xyz, norm, fragCoord + ivec2(k1));
+                occlusion += getOcclusion(al_Position.xyz, norm, fragCoord + ivec2(k2 * 0.75));
+                occlusion += getOcclusion(al_Position.xyz, norm, fragCoord + ivec2(k1 * 0.5));
+                occlusion += getOcclusion(al_Position.xyz, norm, fragCoord + ivec2(k2 * 0.25));
             }
 
             occlusion = clamp(occlusion / 16.0, 0.0, 1.0);
@@ -159,12 +163,11 @@ On/Off SSAO: <input type="checkbox" id="myCheck">
 			vec3 reflectVector	= reflect(-lightVector, pixelNorm);
 			float specular		= pow( max( dot(reflectVector,camVector) ,0.0), uSpecularShininess );
 			vec3 cSpecular		= uLightColor * specular * uSpecularStrength;
-			vec3 norm = normalize(pixelNorm);
 			float light = dot(norm, uLightPos);
 			if (!needTexture) {
                 outColor = vec4( uBaseColor * ((cAmbient + light*0.07 - occlusion) * LowPolyFactor), 1.0);
             } else {
-                outColor = vec4( uBaseColor * ((cAmbient + light*0.07) * LowPolyFactor), 1.0);
+                outColor = vec4( uBaseColor * ((cAmbient- occlusion) * LowPolyFactor), 1.0);
             }
 		}
 	</script>
